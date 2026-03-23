@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="document_page_website_snippet_template" name="Document Page Website Snippet">
+        <section class="o_document_page_website_snippet">
+            <div class="container">
+            </div>
+        </section>
+    </template>
+
+</odoo>

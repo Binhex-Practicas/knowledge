@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="document_page_website_snippet" inherit_id="website.snippets">
+        <xpath expr="//snippets[@id='snippet_groups']" position="inside">
+            <t t-snippet="document_page_website.document_page_website_snippet_template"
+               string="Document Pages"
+               t-thumbnail="/document_page_website/static/src/img/snippet_thumbnail.png"/>
+        </xpath>
+    </template>
+
+</odoo>
