@@ -3,6 +3,11 @@
         <xpath expr="." position="inside">
             <div data-selector=".o_document_page_website_snippet" data-js="DocumentPageOptions">
                 <we-row string="Categories">
+                    <we-button class="o_category_toggle_btn">
+                        Selecionar
+                    </we-button>
+                </we-row>
+                <we-row>
                     <div data-name="categories" data-attribute-name="categories" class="o_category_multi_select">
                     </div>
                 </we-row>

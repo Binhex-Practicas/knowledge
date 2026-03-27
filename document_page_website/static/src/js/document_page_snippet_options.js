@@ -64,6 +64,23 @@ const DocumentPageOptions = options.Class.extend({
             container.appendChild(btn);
         });
     },
+    start() {
+        this._super(...arguments);
+
+        const root = this.$el[0];
+
+        const btn = root.querySelector(".o_category_toggle_btn");
+        const menu = root.querySelector(".o_category_multi_select");
+
+        if (!btn || !menu) {
+            console.warn("Toggle elements not found");
+            return;
+        }
+
+        btn.addEventListener("click", () => {
+            menu.classList.toggle("d-none");
+        });
+    }
 });
 
 options.registry.DocumentPageOptions = DocumentPageOptions;
