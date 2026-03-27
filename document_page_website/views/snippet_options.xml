@@ -3,8 +3,8 @@
         <xpath expr="." position="inside">
             <div data-selector=".o_document_page_website_snippet" data-js="DocumentPageOptions">
                 <we-row string="Categories">
-                    <we-select data-name="categories" data-attribute-name="categories" data-select-data-attribute="true">
-                    </we-select>
+                    <div data-name="categories" data-attribute-name="categories" class="o_category_multi_select">
+                    </div>
                 </we-row>
             </div>
         </xpath>
