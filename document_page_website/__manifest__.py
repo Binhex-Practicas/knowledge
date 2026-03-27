@@ -13,11 +13,15 @@
     "data": [
         "views/document_page_views.xml",
         "views/snippet_template.xml",
+        "views/snippet_options.xml",
         "views/snippet.xml",
     ],
     "assets": {
         "web.assets_frontend": [
             "document_page_website/static/src/js/document_page_dynamic.js",
+        ],
+        "web.assets_backend": [
+            "document_page_website/static/src/js/document_page_snippet_options.js",
         ],
     },
     "installable": True,

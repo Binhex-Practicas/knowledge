@@ -2,7 +2,7 @@
 <odoo>
 
     <template id="document_page_website_snippet_template" name="Document Page Website Snippet">
-        <section class="o_document_page_website_snippet">
+        <section class="o_document_page_website_snippet" data-category-ids="">
             <div class="container">
             </div>
         </section>

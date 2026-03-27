@@ -1,0 +1,12 @@
+<odoo>
+    <template id="document_page_snippet_options" inherit_id="website.snippet_options">
+        <xpath expr="." position="inside">
+            <div data-selector=".o_document_page_website_snippet" data-js="DocumentPageOptions">
+                <we-row string="Categories">
+                    <we-select data-name="categories" data-attribute-name="categories" data-select-data-attribute="true">
+                    </we-select>
+                </we-row>
+            </div>
+        </xpath>
+    </template>
+</odoo>

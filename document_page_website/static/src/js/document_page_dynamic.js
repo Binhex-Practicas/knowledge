@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import publicWidget from "@web/legacy/js/public/public_widget";
 import { rpc } from "@web/core/network/rpc";
 
@@ -8,84 +6,67 @@ publicWidget.registry.document_page_dynamic = publicWidget.Widget.extend({
 
     async start() {
         const container = this.$target.find('.container');
-
         container.empty();
 
-        const data = await rpc('/document_page_website/pages', {});
-
-        if (!data.length) {
-            container.html(`<p>No content found.</p>`);
+        let categories = [];
+        try {
+            categories = await rpc('/document_page_website/pages', {});
+        } catch (error) {
+            console.error("RPC FAILED:", error);
+            container.html(`<p style="color:red;">Failed to load data</p>`);
             return;
         }
 
-        const accordionId = "docAccordion";
+        const selectedIds = (this.$target.attr('data-category-ids') || "")
+            .split(',')
+            .map(id => parseInt(id))
+            .filter(id => !isNaN(id));
 
-        container.html(`<h3>Document Pages</h3>
-            <div class="accordion" id="${accordionId}"></div>
-        `);
+        if (!selectedIds.length) {
+            container.html(`<p>No documents selected.</p>`);
+            return;
+        }
 
-        const accordion = container.find('.accordion');
+        const filteredData = categories.filter(cat => selectedIds.includes(cat.id));
 
-        data.forEach((category, index) => {
+        const accordion = $('<div class="accordion" id="docAccordion"></div>');
+        container.append('<h3>Document Pages</h3>', accordion);
+
+        filteredData.forEach(category => {
             const collapseId = `collapse_${category.id}`;
-
             const item = $(`
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed"
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#${collapseId}">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}">
                             ${category.name}
                         </button>
                     </h2>
                     <div id="${collapseId}" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <div class="row"></div>
-                        </div>
+                        <div class="accordion-body"><div class="row"></div></div>
                     </div>
                 </div>
             `);
 
             const row = item.find('.row');
-
-            item.find('button').on('click', function () {
-                if (row.children().length > 0) {
-                    return;
-                }
-
+            item.find('button').on('click', () => {
+                if (row.children().length) return;
                 category.pages.forEach(page => {
-                    const pageId = `page_${page.id}`;
-
-                    const item = $(`
+                    const pageItem = $(`
                         <div class="mb-2">
                             <div class="page-title" style="cursor:pointer; font-weight:bold;">
                                 ${page.name}
                             </div>
-
-                            <div id="${pageId}" class="page-content" style="display:none; margin-top:10px;">
+                            <div class="page-content" style="display:none;">
                                 ${page.image ? `<img src="${page.image}" class="img-fluid mb-2"/>` : ''}
-
                                 ${page.author ? `<p><strong>By:</strong> ${page.author}</p>` : ''}
-
-                                <div class="mb-2">${page.content}</div>
-
-                                <small>
-                                    <strong>Last update:</strong> ${page.last_update || ''}
-                                </small>
+                                <div>${page.content}</div>
                             </div>
                         </div>
                     `);
-
-                    item.find('.page-title').on('click', function () {
-                        const content = item.find('.page-content');
-
-                        content.slideToggle();
-                    });
-
-                    row.append(item);
+                    pageItem.find('.page-title').on('click', () => pageItem.find('.page-content').slideToggle());
+                    row.append(pageItem);
                 });
-
             });
 
             accordion.append(item);
