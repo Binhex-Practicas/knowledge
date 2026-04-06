@@ -1,0 +1,38 @@
+.accordion-button {
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+}
+
+.accordion-button:hover {
+    background-color: color-mix(in srgb, var(--o-color-2) 20%, transparent);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: color-mix(in srgb, var(--o-color-2) 70%, transparent);
+    color: white;
+    font-weight: 600;
+}
+
+.accordion-button:not(.collapsed):hover {
+    background-color: color-mix(in srgb, var(--o-color-2) 80%, transparent);
+}
+
+.page-link-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+.page-link-item:hover {
+    background-color: color-mix(in srgb, var(--o-color-2) 20%, transparent);
+}
+
+.page-link-item.active {
+    background-color: var(--o-color-1);
+    color: white;
+    font-weight: 600;
+}
+
+.page-link-item.active:hover {
+    background-color: color-mix(in srgb, var(--o-color-1) 85%, black);
+}
