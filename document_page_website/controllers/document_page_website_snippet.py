@@ -16,26 +16,26 @@ class DocumentPageWebsiteController(http.Controller):
             ('type', '=', 'content'),
         ])
 
-        categories = {}
+        categories = request.env['document.page'].sudo().search([
+            ('type', '=', 'category'),
+        ])
+
+        pages_by_category = {}
+
+        def get_cat_id(page):
+            return page.parent_id.id if page.parent_id else 0
 
         for page in pages:
-            category = page.parent_id
+            cat_id = get_cat_id(page)
 
-            id = category.id if category else 0
-            name = category.name if category else "Uncategorized"
-
-            if id not in categories:
-                categories[id] = {
-                    "id": id,
-                    "name": name,
-                    "pages": []
-                }
+            if cat_id not in pages_by_category:
+                pages_by_category[cat_id] = []
 
             image = ''
             if page.image:
                 image = f'data:image/png;base64,{page.image.decode()}'
 
-            categories[id]['pages'].append({
+            pages_by_category[cat_id].append({
                 'id': page.id,
                 'name': page.name,
                 'author': page.content_uid.name if page.content_uid else '',
@@ -44,4 +44,25 @@ class DocumentPageWebsiteController(http.Controller):
                 'image': image,
             })
 
-        return list(categories.values())
+        category_map = {}
+
+        for cat in categories:
+            category_map[cat.id] = {
+                'id': cat.id,
+                'name': cat.name,
+                'parent_id': cat.parent_id.id if cat.parent_id else None,
+                'pages': pages_by_category.get(cat.id, []),
+                'children': []
+            }
+
+        tree = []
+
+        for cat_id, cat in category_map.items():
+            if cat['parent_id']:
+                parent = category_map.get(cat['parent_id'])
+                if parent:
+                    parent['children'].append(cat)
+            else:
+                tree.append(cat)
+
+        return tree

@@ -1,38 +1,81 @@
-.accordion-button {
-    transition: all 0.2s ease;
-    border-radius: 6px 6px 0 0;
-}
-
-.accordion-button:hover {
-    background-color: color-mix(in srgb, var(--o-color-2) 20%, transparent);
-}
-
-.accordion-button:not(.collapsed) {
-    background-color: color-mix(in srgb, var(--o-color-2) 70%, transparent);
-    color: white;
-    font-weight: 600;
-}
-
-.accordion-button:not(.collapsed):hover {
-    background-color: color-mix(in srgb, var(--o-color-2) 80%, transparent);
-}
-
-.page-link-item {
-    cursor: pointer;
-    transition: all 0.2s ease;
+.tree-node {
+    padding: 6px 10px;
+    margin: 2px 0;
     border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
 }
 
-.page-link-item:hover {
-    background-color: color-mix(in srgb, var(--o-color-2) 20%, transparent);
+.tree-node:hover {
+    background: color-mix(in srgb, var(--o-color-2) 18%, transparent);
 }
 
-.page-link-item.active {
-    background-color: var(--o-color-1);
+.tree-node.active {
+    background: var(--o-color-1);
     color: white;
     font-weight: 600;
 }
 
-.page-link-item.active:hover {
-    background-color: color-mix(in srgb, var(--o-color-1) 85%, black);
+.tree-node:not(.page-node) {
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+.page-node {
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+.page-node {
+    padding-left: 10px;
+}
+
+.tree-node {
+    position: relative;
+}
+
+.tree-node::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 2px;
+    background: transparent;
+}
+
+.tree-node:hover::before {
+    background: color-mix(in srgb, var(--o-color-2) 40%, transparent);
+}
+
+.tree-node.active::before {
+    background: white;
+}
+
+.tree-sidebar {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+    flex: 0 0 300px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 10px 0 0 10px;
+    overflow-y: auto;
+}
+
+.content-area {
+    background: white;
+    border-radius: 0 10px 10px 0;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.arrow {
+    width: 16px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 }

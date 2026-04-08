@@ -6,13 +6,18 @@ publicWidget.registry.document_page_dynamic = publicWidget.Widget.extend({
 
     async start() {
         const container = this.$target.find('.container');
-        container.empty();
+        const sidebar = container.find('.tree-sidebar');
+        const content = container.find('.content-area');
 
-        let categories = [];
+        sidebar.empty();
+        content.empty();
+
+        let tree = [];
+
         try {
-            categories = await rpc('/document_page_website/pages', {});
-        } catch (error) {
-            container.html(`<p style="color:red;">Failed to load data</p>`);
+            tree = await rpc('/document_page_website/pages', {});
+        } catch (e) {
+            content.html(`<p style="color:red;">Failed to load data</p>`);
             return;
         }
 
@@ -21,99 +26,97 @@ publicWidget.registry.document_page_dynamic = publicWidget.Widget.extend({
             .map(id => parseInt(id))
             .filter(id => !isNaN(id));
 
-        if (!selectedIds.length) {
-            container.html(`<p>No documents selected.</p>`);
-            return;
+        let filteredTree = tree;
+
+        if (selectedIds.length) {
+            filteredTree = tree.filter(node => selectedIds.includes(node.id));
+
+            if (!filteredTree.length) {
+                content.html(`<p>No documents selected.</p>`);
+                return;
+            }
         }
 
-        const filteredData = categories.filter(cat => selectedIds.includes(cat.id));
+        let firstRendered = false;
 
-        const accordion = $('<div class="accordion" id="docAccordion"></div>');
-        container.append('<h3>Document Pages</h3>', accordion);
+        const renderNode = (node, level = 1) => {
+            const indent = level * 15;
 
-        filteredData.forEach(category => {
-            const collapseId = `collapse_${category.id}`;
-
-            const item = $(`
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#${collapseId}">
-                            ${category.name}
-                        </button>
-                    </h2>
-
-                    <div id="${collapseId}"
-                         class="accordion-collapse collapse"
-                         data-bs-parent="#docAccordion">
-                        <div class="accordion-body"></div>
-                    </div>
+            const nodeEl = $(`
+                <div class="tree-node d-flex align-items-center" style="padding-left:${indent}px;">
+                    <i class="fa fa-chevron-right me-1 toggle-icon"></i>
+                    <span class="label">${node.name}</span>
                 </div>
             `);
 
-            const body = item.find('.accordion-body');
+            const childrenWrapper = $(`<div class="children-wrapper"></div>`).hide();
 
-            item.find('.accordion-collapse').on('shown.bs.collapse', function () {
-                item[0].scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            nodeEl.on('click', (e) => {
+                e.stopPropagation();
+
+                const icon = nodeEl.find('.toggle-icon');
+                const isOpen = childrenWrapper.is(':visible');
+
+                if (isOpen) {
+                    childrenWrapper.slideUp(150);
+                    icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+                } else {
+                    childrenWrapper.slideDown(150);
+                    icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+                }
             });
 
-            item.find('.accordion-collapse').on('hidden.bs.collapse', function () {
-                item.find('.accordion-button').removeClass('active-category');
-            });
+            sidebar.append(nodeEl);
+            sidebar.append(childrenWrapper);
 
-            item.find('button').on('click', () => {
-                if (body.children().length) return;
+            const renderPage = (page, setActive = false) => {
+                if (setActive) {
+                    sidebar.find('.tree-node').removeClass('active');
+                }
 
-                const wrapper = $(`
-                    <div class="d-flex">
-                        <div class="page-sidebar me-3" style="min-width: 220px;"></div>
-                        <div class="page-content-area flex-grow-1"></div>
+                content.html(`
+                    ${page.image ? `<img src="${page.image}" class="img-fluid mb-2"/>` : ''}
+                    ${page.author ? `<p><strong>By: </strong> ${page.author}</p>` : ''}
+                    <div>${page.content}</div>
+                `);
+            };
+
+            (node.pages || []).forEach((page, index) => {
+                const pageEl = $(`
+                    <div class="tree-node page-node d-flex align-items-center"
+                         style="padding-left:${indent + 15}px;">
+                        <i class="fa fa-file-text-o me-1"></i>
+                        <span>${page.name}</span>
                     </div>
                 `);
 
-                const sidebar = wrapper.find('.page-sidebar');
-                const contentArea = wrapper.find('.page-content-area');
+                pageEl.on('click', (e) => {
+                    e.stopPropagation();
 
-                category.pages.forEach((page, index) => {
+                    sidebar.find('.tree-node').removeClass('active');
+                    pageEl.addClass('active');
 
-                    const pageLink = $(`
-                        <div class="page-link-item p-2 border-bottom"
-                             style="cursor:pointer;">
-                            ${page.name}
-                        </div>
-                    `);
-
-                    pageLink.on('click', () => {
-                        sidebar.find('.page-link-item').removeClass('active');
-                        pageLink.addClass('active');
-
-                        contentArea.html(`
-                            ${page.image ? `<img src="${page.image}" class="img-fluid mb-2"/>` : ''}
-                            ${page.author ? `<p><strong>By:</strong> ${page.author}</p>` : ''}
-                            <div>${page.content}</div>
-                        `);
-                    });
-
-                    sidebar.append(pageLink);
-
-                    if (index === 0) {
-                        pageLink.addClass('active');
-                        contentArea.html(`
-                            ${page.image ? `<img src="${page.image}" class="img-fluid mb-2"/>` : ''}
-                            ${page.author ? `<p><strong>By:</strong> ${page.author}</p>` : ''}
-                            <div>${page.content}</div>
-                        `);
-                    }
+                    renderPage(page, false);
                 });
 
-                body.append(wrapper);
+                childrenWrapper.append(pageEl);
+
+                if (!firstRendered) {
+                    pageEl.addClass('active');
+                    renderPage(page, true);
+                    firstRendered = true;
+                }
             });
 
-            accordion.append(item);
-        });
+            (node.children || []).forEach(child => {
+                renderNode(child, level + 1);
+            });
+        };
+
+        filteredTree.forEach(root => renderNode(root));
+
+        if (!firstRendered) {
+            content.html(`<p>No pages available.</p>`);
+        }
     },
 });

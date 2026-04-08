@@ -3,7 +3,9 @@
 
     <template id="document_page_website_snippet_template" name="Document Page Website Snippet">
         <section class="o_document_page_website_snippet" data-category-ids="">
-            <div class="container">
+            <div class="container d-flex">
+                <div class="tree-sidebar p-2 border-end"></div>
+                <div class="content-area flex-grow-1 p-3"></div>
             </div>
         </section>
     </template>

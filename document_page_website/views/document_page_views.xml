@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
+    <record id="view_document_page_tree_inherit_publish" model="ir.ui.view">
+        <field name="name">document.page.tree.inherit.publish</field>
+        <field name="model">document.page</field>
+        <field name="inherit_id" ref="document_page.view_wiki_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list/field[@name='name']" position="after">
+                <field name="is_published"/>
+            </xpath>
+        </field>
+    </record>
+
+
     <record id="view_document_page_form_inherit_publish" model="ir.ui.view">
         <field name="name">document.page.form.inherit.publish</field>
         <field name="model">document.page</field>

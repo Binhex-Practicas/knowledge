@@ -21,7 +21,7 @@
             "document_page_website/static/src/css/style.css",
             "document_page_website/static/src/js/document_page_dynamic.js",
         ],
-        "web.assets_backend": [
+        "website.assets_wysiwyg": [
             "document_page_website/static/src/js/document_page_snippet_options.js",
         ],
     },
