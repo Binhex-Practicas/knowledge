@@ -4,7 +4,7 @@
             <div data-selector=".o_document_page_website_snippet" data-js="DocumentPageOptions">
                 <we-row string="Categories">
                     <we-button class="o_category_toggle_btn">
-                        Selecionar
+                        Select
                     </we-button>
                 </we-row>
                 <we-row>

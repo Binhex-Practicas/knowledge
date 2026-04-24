@@ -33,7 +33,7 @@ class DocumentPageWebsiteController(http.Controller):
 
             image = ''
             if page.image:
-                image = f'data:image/png;base64,{page.image.decode()}'
+                image = f'/web/image/document.page/{page.id}/image'
 
             pages_by_category[cat_id].append({
                 'id': page.id,

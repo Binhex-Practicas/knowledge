@@ -4,119 +4,180 @@ import { rpc } from "@web/core/network/rpc";
 publicWidget.registry.document_page_dynamic = publicWidget.Widget.extend({
     selector: '.o_document_page_website_snippet',
 
-    async start() {
-        const container = this.$target.find('.container');
-        const sidebar = container.find('.tree-sidebar');
-        const content = container.find('.content-area');
+    renderPage(page, sidebar, content, setActive = false) {
+        if (setActive) {
+            sidebar.querySelectorAll('.tree-node')
+                .forEach(el => el.classList.remove('active'));
+        }
 
-        sidebar.empty();
-        content.empty();
+        content.innerHTML = "";
+
+        if (page.image) {
+            const img = document.createElement("img");
+            img.src = page.image;
+            img.className = "img-fluid mb-2";
+            content.appendChild(img);
+        }
+
+        if (page.author) {
+            const p = document.createElement("p");
+            const strong = document.createElement("strong");
+            strong.textContent = "By: ";
+
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(page.author));
+            content.appendChild(p);
+        }
+
+        const div = document.createElement("div");
+        div.innerHTML = page.content || "";
+        content.appendChild(div);
+
+        return content;
+    },
+
+    renderNode(node, level, parentEl, context, visited = new Set()) {
+        if (visited.has(node.id)) return;
+        visited.add(node.id);
+
+        const nodeEl = document.createElement("div");
+        nodeEl.className = "tree-node d-flex align-items-center";
+        nodeEl.style.setProperty("--level", level);
+
+        nodeEl.dataset.open = "0";
+
+        const icon = document.createElement("i");
+        icon.className = "fa fa-chevron-right me-1";
+
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = node.name;
+
+        nodeEl.appendChild(icon);
+        nodeEl.appendChild(label);
+
+        const childrenWrapper = document.createElement("div");
+        childrenWrapper.className = "children-wrapper";
+        childrenWrapper.style.display = "none";
+
+        nodeEl._wrapper = childrenWrapper;
+
+        parentEl.appendChild(nodeEl);
+        parentEl.appendChild(childrenWrapper);
+
+        (node.pages || []).forEach(page => {
+            const pageEl = document.createElement("div");
+            pageEl.className = "tree-node page-node d-flex align-items-center";
+            pageEl.style.setProperty("--level", level + 1);
+
+            const icon = document.createElement("i");
+            icon.className = "fa fa-file-text-o me-1";
+
+            const label = document.createElement("span");
+            label.textContent = page.name;
+
+            pageEl.appendChild(icon);
+            pageEl.appendChild(label);
+
+            context.pageMap.set(page.id, page);
+            pageEl.dataset.pageId = page.id;
+
+            childrenWrapper.appendChild(pageEl);
+
+            if (!context.firstRendered) {
+                pageEl.classList.add("active");
+                context.renderPage(page, context.sidebar, context.content, true);
+                context.firstRendered = true;
+            }
+        });
+
+        (node.children || []).forEach(child => {
+            this.renderNode(child, level + 1, childrenWrapper, context, visited);
+        });
+    },
+
+    async start() {
+        const container = this.el.querySelector(".container");
+        const sidebar = container.querySelector(".tree-sidebar");
+        const content = container.querySelector(".content-area");
+
+        sidebar.innerHTML = "";
+        content.innerHTML = "";
 
         let tree = [];
 
         try {
-            tree = await rpc('/document_page_website/pages', {});
+            tree = await rpc("/document_page_website/pages", {});
         } catch (e) {
-            content.html(`<p style="color:red;">Failed to load data</p>`);
+            content.innerHTML = `<p style="color:red;">Failed to load data</p>`;
             return;
         }
 
-        const selectedIds = (this.$target.attr('data-category-ids') || "")
-            .split(',')
+        const selectedIds = (this.el.dataset.categoryIds || "")
+            .split(",")
             .map(id => parseInt(id))
-            .filter(id => !isNaN(id));
-
-        let filteredTree = tree;
+            .filter(Boolean);
 
         if (selectedIds.length) {
-            filteredTree = tree.filter(node => selectedIds.includes(node.id));
+            tree = tree.filter(node => selectedIds.includes(node.id));
 
-            if (!filteredTree.length) {
-                content.html(`<p>No documents selected.</p>`);
+            if (!tree.length) {
+                content.innerHTML = `<p>No documents selected.</p>`;
                 return;
             }
         }
 
-        let firstRendered = false;
-
-        const renderNode = (node, level = 1) => {
-            const indent = level * 15;
-
-            const nodeEl = $(`
-                <div class="tree-node d-flex align-items-center" style="padding-left:${indent}px;">
-                    <i class="fa fa-chevron-right me-1 toggle-icon"></i>
-                    <span class="label">${node.name}</span>
-                </div>
-            `);
-
-            const childrenWrapper = $(`<div class="children-wrapper"></div>`).hide();
-
-            nodeEl.on('click', (e) => {
-                e.stopPropagation();
-
-                const icon = nodeEl.find('.toggle-icon');
-                const isOpen = childrenWrapper.is(':visible');
-
-                if (isOpen) {
-                    childrenWrapper.slideUp(150);
-                    icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
-                } else {
-                    childrenWrapper.slideDown(150);
-                    icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
-                }
-            });
-
-            sidebar.append(nodeEl);
-            sidebar.append(childrenWrapper);
-
-            const renderPage = (page, setActive = false) => {
-                if (setActive) {
-                    sidebar.find('.tree-node').removeClass('active');
-                }
-
-                content.html(`
-                    ${page.image ? `<img src="${page.image}" class="img-fluid mb-2"/>` : ''}
-                    ${page.author ? `<p><strong>By: </strong> ${page.author}</p>` : ''}
-                    <div>${page.content}</div>
-                `);
-            };
-
-            (node.pages || []).forEach((page, index) => {
-                const pageEl = $(`
-                    <div class="tree-node page-node d-flex align-items-center"
-                         style="padding-left:${indent + 15}px;">
-                        <i class="fa fa-file-text-o me-1"></i>
-                        <span>${page.name}</span>
-                    </div>
-                `);
-
-                pageEl.on('click', (e) => {
-                    e.stopPropagation();
-
-                    sidebar.find('.tree-node').removeClass('active');
-                    pageEl.addClass('active');
-
-                    renderPage(page, false);
-                });
-
-                childrenWrapper.append(pageEl);
-
-                if (!firstRendered) {
-                    pageEl.addClass('active');
-                    renderPage(page, true);
-                    firstRendered = true;
-                }
-            });
-
-            (node.children || []).forEach(child => {
-                renderNode(child, level + 1);
-            });
+        const context = {
+            sidebar,
+            content,
+            firstRendered: false,
+            pageMap: new Map(),
+            renderPage: this.renderPage.bind(this),
         };
 
-        filteredTree.forEach(root => renderNode(root));
+        const fragment = document.createDocumentFragment();
 
-        if (!firstRendered) {
-            content.html(`<p>No pages available.</p>`);
-        }
+        tree.forEach(root => {
+            this.renderNode(root, 1, fragment, context, new Set());
+        });
+
+        sidebar.appendChild(fragment);
+
+        sidebar.addEventListener("click", (e) => {
+            const pageNode = e.target.closest(".tree-node.page-node");
+            if (pageNode && sidebar.contains(pageNode)) {
+                const id = parseInt(pageNode.dataset.pageId);
+                const page = context.pageMap.get(id);
+
+                if (!page) return;
+
+                context.activeNode?.classList.remove("active");
+                context.activeNode = pageNode;
+                pageNode.classList.add("active");
+
+                context.renderPage(page, sidebar, content, false);
+                return;
+            }
+
+            const catNode = e.target.closest(".tree-node:not(.page-node)");
+            if (catNode && sidebar.contains(catNode)) {
+
+                const wrapper = catNode._wrapper;
+                if (!wrapper) return;
+
+                const isOpen = catNode.dataset.open === "1";
+
+                catNode.dataset.open = isOpen ? "0" : "1";
+                wrapper.style.display = isOpen ? "none" : "block";
+
+                const icon = catNode.querySelector("i.fa-chevron-right");
+                if (icon) {
+                    icon.style.transform = isOpen
+                        ? "rotate(0deg)"
+                        : "rotate(90deg)";
+                    icon.style.transition = "0.15s";
+                }
+            }
+        });
     },
 });
